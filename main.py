@@ -104,11 +104,25 @@ When a user asks a question or makes a request, make a function call plan. You c
 All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
 """
 
-response = client.models.generate_content(
-    model='gemini-2.0-flash-001',
-    contents=messages,
-    config=genai.types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt)
-)
+# Loop 20 times for agentic behaviour
+for i in range(20):
+    response = client.models.generate_content(
+        model='gemini-2.0-flash-001',
+        contents=messages,
+        config=genai.types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt)
+    )
+    if not response.function_calls:
+        print(response.text)
+        break
+    
+    llm_message = response.candidates[0].content
+    function_output = call_function(response.function_calls[0], verbose="--verbose" in sys.argv)
+    llm_output = function_output.parts[0].function_response.response
+    
+    if llm_message:
+        messages.append(llm_message)
+    if llm_output:
+        messages.append(llm_output)
 
 function_call = response.function_calls
 
