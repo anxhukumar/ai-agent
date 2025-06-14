@@ -31,9 +31,62 @@ schema_get_files_info = genai.types.FunctionDeclaration(
     ),
 )
 
+#Schema of get_file_content function
+schema_get_file_content = genai.types.FunctionDeclaration(
+    name="get_file_content",
+    description="Gets the content of the specified file, that is constrained to the working directory.",
+    parameters=genai.types.Schema(
+        type=genai.types.Type.OBJECT,
+        properties={
+            "file_path": genai.types.Schema(
+                type=genai.types.Type.STRING,
+                description="The file path to get content from, relative to the working directory."
+            )
+        }
+    )
+)
+
+#Schema of run_python_file function
+schema_run_python_file = genai.types.FunctionDeclaration(
+    name="run_python_file",
+    description="Gets the output of the specified python file, that is constrained to the working directory.",
+    parameters=genai.types.Schema(
+        type=genai.types.Type.OBJECT,
+        properties={
+            "file_path": genai.types.Schema(
+                type=genai.types.Type.STRING,
+                description="The file path to get content from, relative to the working directory."
+            )
+        }
+    )
+)
+
+#Schema of write_files function
+schema_write_files = genai.types.FunctionDeclaration(
+    name="write_files",
+    description="Writes the provided content on a file if it exists at the provided location or creates a files if doesn't exist and it also creates any missing directories that are missing before the desired file path location.",
+    parameters=genai.types.Schema(
+        type=genai.types.Type.OBJECT,
+        properties={
+            "file_path": genai.types.Schema(
+                type=genai.types.Type.STRING,
+                description="The file path to get content from, relative to the working directory."
+            ),
+            "content": genai.types.Schema(
+                type=genai.types.Type.STRING,
+                description="The content that will be written to the file."
+            )
+        }
+    )
+)
+
 available_functions = genai.types.Tool(
     function_declarations=[
         schema_get_files_info,
+        schema_get_file_content,
+        schema_run_python_file,
+        schema_write_files
+
     ]
 )
 
@@ -43,6 +96,9 @@ You are a helpful AI coding agent.
 When a user asks a question or makes a request, make a function call plan. You can perform the following operations:
 
 - List files and directories
+- Read file contents
+- Execute Python files with optional arguments
+- Write or overwrite files
 
 All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
 """
