@@ -112,35 +112,23 @@ for i in range(20):
         config=genai.types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt)
     )
     if not response.function_calls:
-        print(response.text)
-        break
+        if "--verbose" in sys.argv:
+            print(f"User prompt: {sys.argv[1]}\n Response: {response.text} Prompt tokens: {response.usage_metadata.prompt_token_count}\n Response tokens: {response.usage_metadata.candidates_token_count}")
+        else:
+            print(response.text)
+        sys.exit(0)
     
-    llm_message = response.candidates[0].content
-    function_output = call_function(response.function_calls[0], verbose="--verbose" in sys.argv)
-    llm_output = function_output.parts[0].function_response.response
     
-    if llm_message:
-        messages.append(llm_message)
-    if llm_output:
-        messages.append(llm_output)
+    for c in response.candidates:
+        messages.append(c.content)
+    
+    try:
+        function_output = call_function(response.function_calls[0], verbose="--verbose" in sys.argv)
+    except Exception as e:
+        print(f"Error calling function: {e}")
+        sys.exit(1)
 
-function_call = response.function_calls
-
-if not function_call:
-    if "--verbose" in sys.argv:
-        print(f"User prompt: {sys.argv[1]}\n Response: {response.text} Prompt tokens: {response.usage_metadata.prompt_token_count}\n Response tokens: {response.usage_metadata.candidates_token_count}")
-    else:
-        print(response.text)
-    sys.exit(0)
-
-try:
-    function_output = call_function(function_call[0], verbose="--verbose" in sys.argv)
-except Exception as e:
-    print(f"Error calling function: {e}")
-    sys.exit(1)
-
-if function_output.parts[0].function_response.response:
-    if "--verbose" in sys.argv:
-        print(f"-> {function_output.parts[0].function_response.response}")
-    else:
-        print(function_output.parts[0].function_response.response["result"])
+    if function_output.parts[0].function_response.response:
+        if "--verbose" in sys.argv:
+            print(f"-> {function_output.parts[0].function_response.response}")
+        messages.append(function_output)
