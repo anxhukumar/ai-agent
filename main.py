@@ -1,7 +1,8 @@
 import os
-from dotenv import load_dotenv
-from google import genai
 import sys
+from google import genai
+from dotenv import load_dotenv
+from functions.call_function import call_function
 
 load_dotenv()
 
@@ -111,10 +112,21 @@ response = client.models.generate_content(
 
 function_call = response.function_calls
 
-if function_call:
-    print(f"Calling function: {function_call[0].name}({function_call[0].args})")
-else:
+if not function_call:
     if "--verbose" in sys.argv:
         print(f"User prompt: {sys.argv[1]}\n Response: {response.text} Prompt tokens: {response.usage_metadata.prompt_token_count}\n Response tokens: {response.usage_metadata.candidates_token_count}")
     else:
         print(response.text)
+    sys.exit(0)
+
+try:
+    function_output = call_function(function_call[0], verbose="--verbose" in sys.argv)
+except Exception as e:
+    print(f"Error calling function: {e}")
+    sys.exit(1)
+
+if function_output.parts[0].function_response.response:
+    if "--verbose" in sys.argv:
+        print(f"-> {function_output.parts[0].function_response.response}")
+    else:
+        print(function_output.parts[0].function_response.response["result"])
