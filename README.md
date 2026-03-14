@@ -1,6 +1,6 @@
 # AI Agent Playground
 
-A small Python project that demonstrates a CLI AI agent and a sample calculator app.
+A Python project that demonstrates a CLI AI agent and a sample calculator app.
 
 ## What's included
 
